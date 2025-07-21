@@ -17,7 +17,7 @@ public class Main {
                 ") WITH (\n" +
                 "    'connector' = 'kafka',\n" +
                 "    'topic' = 'input-topic',\n" +
-                "    'properties.bootstrap.servers' = 'kafka:9093',\n" +
+                "    'properties.bootstrap.servers' = 'kafka:19092',\n" +
                 "    'properties.group.id' = 'my-group',\n" +
                 "    'scan.startup.mode' = 'earliest-offset',\n" +
                 "    'format' = 'json'\n" +
@@ -31,7 +31,7 @@ public class Main {
                 ") WITH (\n" +
                 "    'connector' = 'kafka',\n" +
                 "    'topic' = 'output-topic',\n" +
-                "    'properties.bootstrap.servers' = 'kafka:9093',\n" +
+                "    'properties.bootstrap.servers' = 'kafka:19092',\n" +
                 "    'format' = 'json'\n" +
                 ")";
         tableEnv.executeSql(create_sink_table);

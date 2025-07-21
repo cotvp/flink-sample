@@ -8,10 +8,12 @@ services:
       - jobmanager
     command: taskmanager
     environment:
-      - |
-        FLINK_PROPERTIES=
+      FLINK_PROPERTIES: |
         jobmanager.rpc.address: jobmanager
         taskmanager.numberOfTaskSlots: 6
+    networks:
+      - flink-net
+
   jobmanager:
     image: flink:java21
     container_name: jobmanager
@@ -20,25 +22,36 @@ services:
       - "8082:8082"
     command: jobmanager
     environment:
-      - |
-        FLINK_PROPERTIES=
+      FLINK_PROPERTIES: |
         jobmanager.rpc.address: jobmanager
         rest.address: jobmanager
         rest.port: 8082
+    networks:
+      - flink-net
+
   kafka:
     image: bitnami/kafka:4.0.0
     ports:
-      - "9092:9092"
-    expose:
-      - "9093"
+      - "9092:9092"   # Host access (IntelliJ, etc.)
+      - "19092:19092" # Internal container access (Flink, etc.)
     environment:
       KAFKA_KRAFT_MODE: "true"
       KAFKA_CFG_PROCESS_ROLES: "broker,controller"
       KAFKA_CFG_NODE_ID: 1
       KAFKA_CFG_CONTROLLER_QUORUM_VOTERS: "1@kafka:9093"
-      KAFKA_CFG_LISTENERS: "PLAINTEXT://:9092,CONTROLLER://:9093"
-      KAFKA_CFG_ADVERTISED_LISTENERS: "PLAINTEXT://kafka:9092"
+
+      # Multi-listener setup
+      KAFKA_CFG_LISTENERS: "PLAINTEXT_INTERNAL://0.0.0.0:19092,PLAINTEXT_EXTERNAL://0.0.0.0:9092,CONTROLLER://0.0.0.0:9093"
+      KAFKA_CFG_ADVERTISED_LISTENERS: "PLAINTEXT_INTERNAL://kafka:19092,PLAINTEXT_EXTERNAL://localhost:9092"
+      KAFKA_CFG_LISTENER_SECURITY_PROTOCOL_MAP: "PLAINTEXT_INTERNAL:PLAINTEXT,PLAINTEXT_EXTERNAL:PLAINTEXT,CONTROLLER:PLAINTEXT"
+      KAFKA_CFG_INTER_BROKER_LISTENER_NAME: "PLAINTEXT_INTERNAL"
       KAFKA_CFG_CONTROLLER_LISTENER_NAMES: "CONTROLLER"
-      KAFKA_CFG_INTER_BROKER_LISTENER_NAME: "PLAINTEXT"
-      ALLOW_PLAINTEXT_LISTENER: "yes"
-      KAFKA_CREATE_TOPICS: "input-topic:1:1,output-topic:1:1"
+
+      # Enable topic auto-creation for dev
+      KAFKA_CFG_AUTO_CREATE_TOPICS_ENABLE: "true"
+
+    networks:
+      - flink-net
+
+networks:
+  flink-net:
