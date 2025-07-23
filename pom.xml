@@ -10,7 +10,7 @@
 
     <properties>
         <flink.version>2.0.0</flink.version>
-        <java.version>21</java.version>
+        <java.version>17</java.version>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     </properties>
 
@@ -20,27 +20,18 @@
             <groupId>org.apache.flink</groupId>
             <artifactId>flink-streaming-java</artifactId>
             <version>${flink.version}</version>
-            <scope>provided</scope>
         </dependency>
 
         <dependency>
             <groupId>org.apache.flink</groupId>
-            <artifactId>flink-sql-connector-kafka</artifactId>
-            <version>4.0.0-2.0</version>
-        </dependency>
-
-        <dependency>
-            <groupId>org.apache.flink</groupId>
-            <artifactId>flink-table-api-java</artifactId>
-            <version>2.0.0</version>
-            <scope>compile</scope>
-        </dependency>
-
-        <dependency>
-            <groupId>org.apache.flink</groupId>
-            <artifactId>flink-table-api-java-bridge</artifactId>
+            <artifactId>flink-connector-base</artifactId>
             <version>${flink.version}</version>
-            <scope>compile</scope>
+        </dependency>
+
+        <dependency>
+            <groupId>org.apache.flink</groupId>
+            <artifactId>flink-connector-kafka</artifactId>
+            <version>4.0.0-2.0</version>
         </dependency>
 
     </dependencies>
@@ -51,19 +42,23 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-shade-plugin</artifactId>
-                <version>3.6.0</version>
+                <version>3.1.1</version>
                 <executions>
                     <execution>
                         <phase>package</phase>
-                        <goals><goal>shade</goal></goals>
+                        <goals>
+                            <goal>shade</goal>
+                        </goals>
                         <configuration>
                             <artifactSet>
-                                <includes>
-                                    <include>org.apache.flink:flink-sql-connector-kafka</include>
-                                </includes>
+                                <excludes>
+                                    <exclude>com.google.code.findbugs:jsr305</exclude>
+                                </excludes>
                             </artifactSet>
                             <filters>
                                 <filter>
+                                    <!-- Do not copy the signatures in the META-INF folder.
+                                    Otherwise, this might cause SecurityExceptions when using the JAR. -->
                                     <artifact>*:*</artifact>
                                     <excludes>
                                         <exclude>META-INF/*.SF</exclude>
@@ -72,13 +67,13 @@
                                     </excludes>
                                 </filter>
                             </filters>
-                            <relocations>
-                                <!-- Optional: Prevent package conflicts -->
-                                <relocation>
-                                    <pattern>org.apache.kafka</pattern>
-                                    <shadedPattern>shadow.kafka</shadedPattern>
-                                </relocation>
-                            </relocations>
+                            <transformers>
+                                <transformer implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
+                                    <!-- Replace this with the main class of your job -->
+                                    <mainClass>my.programs.main.clazz</mainClass>
+                                </transformer>
+                                <transformer implementation="org.apache.maven.plugins.shade.resource.ServicesResourceTransformer"/>
+                            </transformers>
                         </configuration>
                     </execution>
                 </executions>
