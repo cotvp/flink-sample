@@ -12,16 +12,13 @@ import org.apache.flink.connector.kafka.source.enumerator.initializer.OffsetsIni
 import org.apache.flink.connector.kafka.source.reader.deserializer.KafkaRecordDeserializationSchema;
 import org.apache.flink.streaming.api.datastream.DataStream;
 import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
-import org.apache.flink.streaming.api.windowing.assigners.GlobalWindows;
-import org.apache.flink.streaming.api.windowing.triggers.Trigger;
-import org.apache.flink.streaming.api.windowing.triggers.TriggerResult;
-import org.apache.flink.streaming.api.windowing.windows.GlobalWindow;
+import org.apache.flink.streaming.api.functions.co.ProcessJoinFunction;
 import org.apache.flink.util.Collector;
-import org.apache.flink.util.TaggedUnion;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.clients.producer.ProducerRecord;
 
 import java.nio.charset.StandardCharsets;
+import java.time.Duration;
 
 public class Main {
 
@@ -86,43 +83,25 @@ public class Main {
                 .setDeliveryGuarantee(DeliveryGuarantee.AT_LEAST_ONCE)
                 .build();
 
+        WatermarkStrategy<KafkaRecord> strategy = WatermarkStrategy
+                .<KafkaRecord>forBoundedOutOfOrderness(Duration.ZERO)
+                .withTimestampAssigner((element, recordTimestamp) -> System.currentTimeMillis());
 
-        DataStream<KafkaRecord> inputs = env.fromSource(source, WatermarkStrategy.noWatermarks(), "Kafka Source");
+        DataStream<KafkaRecord> inputs = env.fromSource(source, strategy, "Kafka Source");
 
-        DataStream<KafkaRecord> inputs2 = env.fromSource(additionalSource, WatermarkStrategy.noWatermarks(), "Kafka Source");
+        DataStream<KafkaRecord> inputs2 = env.fromSource(additionalSource, strategy, "Kafka Source");
 
         inputs
-                .join(inputs2)
-                .where(keyedRecord -> keyedRecord.key)
-                .equalTo(keyedRecord -> keyedRecord.key)
-                .window(GlobalWindows.create())
-                .trigger(new Trigger<>() {
-                    @Override
-                    public TriggerResult onElement(TaggedUnion<KafkaRecord, KafkaRecord> keyedRecordKeyedRecordTaggedUnion, long l, GlobalWindow globalWindow, TriggerContext triggerContext) {
-                        return TriggerResult.FIRE;
-                    }
+                .keyBy(KafkaRecord::key)
+                .intervalJoin(inputs2.keyBy(KafkaRecord::key))
+                .between(Duration.ofSeconds(-15), Duration.ofSeconds(15))
+                .process (new ProcessJoinFunction<KafkaRecord, KafkaRecord, KafkaRecord>(){
 
                     @Override
-                    public TriggerResult onProcessingTime(long l, GlobalWindow globalWindow, TriggerContext triggerContext) {
-                        return TriggerResult.CONTINUE;
-                    }
-
-                    @Override
-                    public TriggerResult onEventTime(long l, GlobalWindow globalWindow, TriggerContext triggerContext) {
-                        return TriggerResult.CONTINUE;
-                    }
-
-                    @Override
-                    public void clear(GlobalWindow globalWindow, TriggerContext triggerContext) {
-                        // nothing to clear
+                    public void processElement(KafkaRecord left, KafkaRecord right, Context ctx, Collector<KafkaRecord> out) {
+                        out.collect(new KafkaRecord(left.key, left.value + "/" + right.value));
                     }
                 })
-                .apply((kr1, kr2) -> new KafkaRecord(
-                                kr1.key,
-                                kr1.value + "/" + kr2.value
-                        )
-
-                )
                 .sinkTo(sink);
         env.execute();
     }
