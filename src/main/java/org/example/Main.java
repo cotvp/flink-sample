@@ -12,7 +12,6 @@ import org.apache.flink.connector.kafka.source.enumerator.initializer.OffsetsIni
 import org.apache.flink.connector.kafka.source.reader.deserializer.KafkaRecordDeserializationSchema;
 import org.apache.flink.streaming.api.datastream.DataStream;
 import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
-import org.apache.flink.streaming.api.functions.co.ProcessJoinFunction;
 import org.apache.flink.util.Collector;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.clients.producer.ProducerRecord;
@@ -24,7 +23,6 @@ public class Main {
 
     static final String BOOTSTRAP_SERVERS = "kafka:19092";
 
-    public record KafkaRecord (String key, String value) {}
     public static void main(String[] args) throws Exception {
         // Set up the Flink execution environment
         StreamExecutionEnvironment env = StreamExecutionEnvironment.getExecutionEnvironment();
@@ -73,8 +71,8 @@ public class Main {
                                 "output-topic",
                                 /* partition */ null,
                                 /* timestamp */ System.currentTimeMillis(),
-                                /* key */ element.key.getBytes(StandardCharsets.UTF_8),
-                                /* value */ element.value.getBytes(StandardCharsets.UTF_8)
+                                /* key */ element.key().getBytes(StandardCharsets.UTF_8),
+                                /* value */ element.value().getBytes(StandardCharsets.UTF_8)
                         );
 
         KafkaSink<KafkaRecord> sink = KafkaSink.<KafkaRecord>builder()
@@ -93,16 +91,10 @@ public class Main {
 
         inputs
                 .keyBy(KafkaRecord::key)
-                .intervalJoin(inputs2.keyBy(KafkaRecord::key))
-                .between(Duration.ofSeconds(-15), Duration.ofSeconds(15))
-                .process (new ProcessJoinFunction<KafkaRecord, KafkaRecord, KafkaRecord>(){
-
-                    @Override
-                    public void processElement(KafkaRecord left, KafkaRecord right, Context ctx, Collector<KafkaRecord> out) {
-                        out.collect(new KafkaRecord(left.key, left.value + "/" + right.value));
-                    }
-                })
+                .connect(inputs2.keyBy(KafkaRecord::key))
+                .process(new StatefulJoin())
                 .sinkTo(sink);
+
         env.execute();
     }
 
