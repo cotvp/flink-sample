@@ -21,7 +21,6 @@ import org.apache.flink.util.TaggedUnion;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.clients.producer.ProducerRecord;
 
-import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 
 public class Main {
@@ -41,16 +40,13 @@ public class Main {
                     }
 
                     @Override
-                    public void deserialize(ConsumerRecord<byte[], byte[]> consumerRecord, Collector<KafkaRecord> collector) throws IOException {
+                    public void deserialize(ConsumerRecord<byte[], byte[]> consumerRecord, Collector<KafkaRecord> collector) {
                         String key = consumerRecord.key() == null
                                 ? null
                                 : new String(consumerRecord.key(), StandardCharsets.UTF_8);
                         String value = new String(consumerRecord.value(), StandardCharsets.UTF_8);
                         collector.collect(new KafkaRecord(key, value));
                     }
-
-                    private static final long serialVersionUID = 1L;
-
 
                     @Override
                     public TypeInformation<KafkaRecord> getProducedType() {
@@ -102,22 +98,22 @@ public class Main {
                 .window(GlobalWindows.create())
                 .trigger(new Trigger<>() {
                     @Override
-                    public TriggerResult onElement(TaggedUnion<KafkaRecord, KafkaRecord> keyedRecordKeyedRecordTaggedUnion, long l, GlobalWindow globalWindow, TriggerContext triggerContext) throws Exception {
+                    public TriggerResult onElement(TaggedUnion<KafkaRecord, KafkaRecord> keyedRecordKeyedRecordTaggedUnion, long l, GlobalWindow globalWindow, TriggerContext triggerContext) {
                         return TriggerResult.FIRE;
                     }
 
                     @Override
-                    public TriggerResult onProcessingTime(long l, GlobalWindow globalWindow, TriggerContext triggerContext) throws Exception {
+                    public TriggerResult onProcessingTime(long l, GlobalWindow globalWindow, TriggerContext triggerContext) {
                         return TriggerResult.CONTINUE;
                     }
 
                     @Override
-                    public TriggerResult onEventTime(long l, GlobalWindow globalWindow, TriggerContext triggerContext) throws Exception {
+                    public TriggerResult onEventTime(long l, GlobalWindow globalWindow, TriggerContext triggerContext) {
                         return TriggerResult.CONTINUE;
                     }
 
                     @Override
-                    public void clear(GlobalWindow globalWindow, TriggerContext triggerContext) throws Exception {
+                    public void clear(GlobalWindow globalWindow, TriggerContext triggerContext) {
                         // nothing to clear
                     }
                 })
