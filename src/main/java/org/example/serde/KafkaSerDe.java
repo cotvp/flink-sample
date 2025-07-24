@@ -1,4 +1,4 @@
-package org.example;
+package org.example.serde;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -14,7 +14,7 @@ import org.apache.kafka.clients.producer.ProducerRecord;
 import java.io.Serializable;
 import java.nio.charset.StandardCharsets;
 
-public class Serde {
+public class KafkaSerDe {
 
     private static final ObjectMapper objectMapper = new ObjectMapper();
 
@@ -36,7 +36,7 @@ public class Serde {
                     String valueString = new String(consumerRecord.value(), StandardCharsets.UTF_8);
                     T value = clazz.equals(String.class)
                             ? (T) valueString
-                            : Serde.objectMapper.readValue(valueString, clazz);
+                            : KafkaSerDe.objectMapper.readValue(valueString, clazz);
                     collector.collect(new KafkaRecord<>(key, value));
                 } catch (JsonProcessingException e) {
                     throw new RuntimeException();
@@ -60,7 +60,7 @@ public class Serde {
                         /* partition */ null,
                         /* timestamp */ System.currentTimeMillis(),
                         /* key */ element.key().getBytes(StandardCharsets.UTF_8),
-                        /* value */ Serde.objectMapper.writeValueAsString(element.value()).getBytes(StandardCharsets.UTF_8)
+                        /* value */ KafkaSerDe.objectMapper.writeValueAsString(element.value()).getBytes(StandardCharsets.UTF_8)
                 );
             } catch (JsonProcessingException e) {
                 throw new RuntimeException(e);

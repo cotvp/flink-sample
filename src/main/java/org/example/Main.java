@@ -7,6 +7,9 @@ import org.apache.flink.connector.kafka.source.KafkaSource;
 import org.apache.flink.connector.kafka.source.enumerator.initializer.OffsetsInitializer;
 import org.apache.flink.streaming.api.datastream.DataStream;
 import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
+import org.example.operators.StatefulJoin;
+import org.example.serde.KafkaRecord;
+import org.example.serde.KafkaSerDe;
 
 import java.time.Duration;
 
@@ -22,21 +25,21 @@ public class Main {
                 .setBootstrapServers(BOOTSTRAP_SERVERS)
                 .setTopics("input-topic")
                 .setGroupId("my-group")
-                .setStartingOffsets(OffsetsInitializer.earliest())
-                .setDeserializer(Serde.getDeserializer(String.class))
+                .setStartingOffsets(OffsetsInitializer.latest())
+                .setDeserializer(KafkaSerDe.getDeserializer(String.class))
                 .build();
 
         KafkaSource<KafkaRecord<String>> additionalSource = KafkaSource.<KafkaRecord<String>>builder()
                 .setBootstrapServers(BOOTSTRAP_SERVERS)
                 .setTopics("input-topic2")
                 .setGroupId("my-group2")
-                .setStartingOffsets(OffsetsInitializer.earliest())
-                .setDeserializer(Serde.getDeserializer(String.class))
+                .setStartingOffsets(OffsetsInitializer.latest())
+                .setDeserializer(KafkaSerDe.getDeserializer(String.class))
                 .build();
 
         KafkaSink<KafkaRecord<String>> sink = KafkaSink.<KafkaRecord<String>>builder()
                 .setBootstrapServers(BOOTSTRAP_SERVERS)
-                .setRecordSerializer(Serde.getSerializer())
+                .setRecordSerializer(KafkaSerDe.getSerializer())
                 .setDeliveryGuarantee(DeliveryGuarantee.AT_LEAST_ONCE)
                 .build();
 
@@ -52,6 +55,12 @@ public class Main {
                 .keyBy(KafkaRecord::key)
                 .connect(inputs2.keyBy(KafkaRecord::key))
                 .process(new StatefulJoin<>((r1, r2) -> new KafkaRecord<>(r1.key(), r1.value() + " " + r2.value())))
+                .sinkTo(sink);
+
+        inputs2
+                .keyBy(KafkaRecord::key)
+                .connect(inputs.keyBy(KafkaRecord::key))
+                .process(new StatefulJoin<>((r1, r2) -> new KafkaRecord<>(r1.key(), "! " + r1.value() + " " + r2.value() + " !")))
                 .sinkTo(sink);
 
         env.execute();
