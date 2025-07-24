@@ -14,9 +14,10 @@ import java.util.function.BiFunction;
 public class StatefulJoin<T extends Serializable> extends KeyedCoProcessFunction<String, KafkaRecord<T>, KafkaRecord<T>, KafkaRecord<T>> implements Serializable {
     private transient ValueState<KafkaRecord<T>> lastRecord1;
     private transient ValueState<KafkaRecord<T>> lastRecord2;
-    private final BiFunction<KafkaRecord<T>, KafkaRecord<T>, KafkaRecord<T>> join;
 
-    public StatefulJoin(BiFunction<KafkaRecord<T>, KafkaRecord<T>, KafkaRecord<T>> join) {
+    private SerializableBiFunction<KafkaRecord<T>, KafkaRecord<T>, KafkaRecord<T>> join;
+
+    public StatefulJoin(SerializableBiFunction<KafkaRecord<T>, KafkaRecord<T>, KafkaRecord<T>> join) {
         this.join = join;
     }
 
@@ -39,7 +40,7 @@ public class StatefulJoin<T extends Serializable> extends KeyedCoProcessFunction
             Collector<KafkaRecord<T>> out) throws Exception {
         KafkaRecord<T> other = lastRecord1.value();
         if (other != null) {
-            out.collect(join.apply(value2, other));
+            out.collect(join.apply(other, value2));
         }
         lastRecord2.update(value2);
     }
@@ -61,4 +62,10 @@ public class StatefulJoin<T extends Serializable> extends KeyedCoProcessFunction
                 )
         );
     }
+
+    @FunctionalInterface
+    public interface SerializableBiFunction<L, R, O>
+            extends BiFunction<L, R, O>, Serializable { }
+
+
 }
