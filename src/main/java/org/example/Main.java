@@ -27,7 +27,7 @@ public class Main {
         // Set up the Flink execution environment
         StreamExecutionEnvironment env = StreamExecutionEnvironment.getExecutionEnvironment();
 
-        KafkaRecordDeserializationSchema<KafkaRecord> kvDeser =
+        KafkaRecordDeserializationSchema<KafkaRecord<String>> kvDeser =
                 new KafkaRecordDeserializationSchema<>() {
                     @Override
                     public void open(DeserializationSchema.InitializationContext context) throws Exception {
@@ -35,21 +35,22 @@ public class Main {
                     }
 
                     @Override
-                    public void deserialize(ConsumerRecord<byte[], byte[]> consumerRecord, Collector<KafkaRecord> collector) {
-                        String key = consumerRecord.key() == null
-                                ? null
-                                : new String(consumerRecord.key(), StandardCharsets.UTF_8);
-                        String value = new String(consumerRecord.value(), StandardCharsets.UTF_8);
-                        collector.collect(new KafkaRecord(key, value));
+                    public void deserialize(ConsumerRecord<byte[], byte[]> consumerRecord, Collector<KafkaRecord<String>> collector) {
+                        collector.collect(new KafkaRecord<>(
+                                consumerRecord.key() == null
+                                        ? null
+                                        : new String(consumerRecord.key(), StandardCharsets.UTF_8),
+                                new String(consumerRecord.value(), StandardCharsets.UTF_8)
+                        ));
                     }
 
                     @Override
-                    public TypeInformation<KafkaRecord> getProducedType() {
+                    public TypeInformation<KafkaRecord<String>> getProducedType() {
                         return TypeInformation.of(new TypeHint<>() {});
                     }
                 };
 
-        KafkaSource<KafkaRecord> source = KafkaSource.<KafkaRecord>builder()
+        KafkaSource<KafkaRecord<String>> source = KafkaSource.<KafkaRecord<String>>builder()
                 .setBootstrapServers(BOOTSTRAP_SERVERS)
                 .setTopics("input-topic")
                 .setGroupId("my-group")
@@ -57,7 +58,7 @@ public class Main {
                 .setDeserializer(kvDeser)
                 .build();
 
-        KafkaSource<KafkaRecord> additionalSource = KafkaSource.<KafkaRecord>builder()
+        KafkaSource<KafkaRecord<String>> additionalSource = KafkaSource.<KafkaRecord<String>>builder()
                 .setBootstrapServers(BOOTSTRAP_SERVERS)
                 .setTopics("input-topic2")
                 .setGroupId("my-group2")
@@ -65,7 +66,7 @@ public class Main {
                 .setDeserializer(kvDeser)
                 .build();
 
-        KafkaRecordSerializationSchema<KafkaRecord> serializer =
+        KafkaRecordSerializationSchema<KafkaRecord<String>> serializer =
                 (element, ctx, timestamp) ->
                         new ProducerRecord<>(
                                 "output-topic",
@@ -75,24 +76,24 @@ public class Main {
                                 /* value */ element.value().getBytes(StandardCharsets.UTF_8)
                         );
 
-        KafkaSink<KafkaRecord> sink = KafkaSink.<KafkaRecord>builder()
+        KafkaSink<KafkaRecord<String>> sink = KafkaSink.<KafkaRecord<String>>builder()
                 .setBootstrapServers(BOOTSTRAP_SERVERS)
                 .setRecordSerializer(serializer)
                 .setDeliveryGuarantee(DeliveryGuarantee.AT_LEAST_ONCE)
                 .build();
 
-        WatermarkStrategy<KafkaRecord> strategy = WatermarkStrategy
-                .<KafkaRecord>forBoundedOutOfOrderness(Duration.ZERO)
+        WatermarkStrategy<KafkaRecord<String>> strategy = WatermarkStrategy
+                .<KafkaRecord<String>>forBoundedOutOfOrderness(Duration.ZERO)
                 .withTimestampAssigner((element, recordTimestamp) -> System.currentTimeMillis());
 
-        DataStream<KafkaRecord> inputs = env.fromSource(source, strategy, "Kafka Source");
+        DataStream<KafkaRecord<String>> inputs = env.fromSource(source, strategy, "Kafka Source");
 
-        DataStream<KafkaRecord> inputs2 = env.fromSource(additionalSource, strategy, "Kafka Source");
+        DataStream<KafkaRecord<String>> inputs2 = env.fromSource(additionalSource, strategy, "Kafka Source");
 
         inputs
                 .keyBy(KafkaRecord::key)
                 .connect(inputs2.keyBy(KafkaRecord::key))
-                .process(new StatefulJoin())
+                .process(new StatefulJoin<>((r1, r2) -> new KafkaRecord<>(r1.key(), r1.value() + " " + r2.value())))
                 .sinkTo(sink);
 
         env.execute();

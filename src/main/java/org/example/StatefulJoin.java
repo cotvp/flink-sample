@@ -8,32 +8,38 @@ import org.apache.flink.api.common.typeinfo.TypeInformation;
 import org.apache.flink.streaming.api.functions.co.KeyedCoProcessFunction;
 import org.apache.flink.util.Collector;
 
-public class StatefulJoin extends KeyedCoProcessFunction<String, KafkaRecord, KafkaRecord, KafkaRecord> {
-    private transient ValueState<KafkaRecord> lastRecord1;
-    private transient ValueState<KafkaRecord> lastRecord2;
+import java.io.Serializable;
+import java.util.function.BiFunction;
+
+public class StatefulJoin<T extends Serializable> extends KeyedCoProcessFunction<String, KafkaRecord<T>, KafkaRecord<T>, KafkaRecord<T>> implements Serializable {
+    private transient ValueState<KafkaRecord<T>> lastRecord1;
+    private transient ValueState<KafkaRecord<T>> lastRecord2;
+    private final BiFunction<KafkaRecord<T>, KafkaRecord<T>, KafkaRecord<T>> join;
+
+    public StatefulJoin(BiFunction<KafkaRecord<T>, KafkaRecord<T>, KafkaRecord<T>> join) {
+        this.join = join;
+    }
 
     @Override
     public void processElement1(
-            KafkaRecord value1,
+            KafkaRecord<T> value1,
             Context ctx,
-            Collector<KafkaRecord> out) throws Exception {
-        KafkaRecord other = lastRecord2.value();
+            Collector<KafkaRecord<T>> out) throws Exception {
+        KafkaRecord<T> other = lastRecord2.value();
         if (other != null) {
-            String joinedValue = value1.value() + "/" + other.value();
-            out.collect(new KafkaRecord(value1.key(), joinedValue));
+            out.collect(join.apply(value1, other));
         }
         lastRecord1.update(value1);
     }
 
     @Override
     public void processElement2(
-            KafkaRecord value2,
+            KafkaRecord<T> value2,
             Context ctx,
-            Collector<KafkaRecord> out) throws Exception {
-        KafkaRecord other = lastRecord1.value();
+            Collector<KafkaRecord<T>> out) throws Exception {
+        KafkaRecord<T> other = lastRecord1.value();
         if (other != null) {
-            String joinedValue = other.value() + "/" + value2.value();
-            out.collect(new KafkaRecord(value2.key(), joinedValue));
+            out.collect(join.apply(value2, other));
         }
         lastRecord2.update(value2);
     }

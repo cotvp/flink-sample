@@ -1,4 +1,4 @@
 package org.example;
 
-public record KafkaRecord (String key, String value) {
+public record KafkaRecord<T> (String key, T value) {
 }
