@@ -2,6 +2,7 @@ package org.example.serde;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.flink.api.common.serialization.DeserializationSchema;
 import org.apache.flink.api.common.typeinfo.TypeHint;
 import org.apache.flink.api.common.typeinfo.TypeInformation;
@@ -11,15 +12,17 @@ import org.apache.flink.util.Collector;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.clients.producer.ProducerRecord;
 
-import java.io.Serializable;
 import java.nio.charset.StandardCharsets;
 
+@Slf4j
 public class KafkaSerDe {
+
+    private KafkaSerDe() {}
 
     private static final ObjectMapper objectMapper = new ObjectMapper();
 
 
-    public static <T extends Serializable> KafkaRecordDeserializationSchema<KafkaRecord<T>> getDeserializer(Class<T> clazz) {
+    public static <T> KafkaRecordDeserializationSchema<KafkaRecord<T>> getDeserializer(Class<T> clazz) {
         return new KafkaRecordDeserializationSchema<>() {
 
             @Override
@@ -37,9 +40,9 @@ public class KafkaSerDe {
                     T value = clazz.equals(String.class)
                             ? (T) valueString
                             : KafkaSerDe.objectMapper.readValue(valueString, clazz);
-                    collector.collect(new KafkaRecord<>(key, value));
+                    collector.collect(new KafkaRecord<>(key, consumerRecord.offset(), value));
                 } catch (JsonProcessingException e) {
-                    throw new RuntimeException();
+                    log.error(e.getMessage());
                 }
             }
 
@@ -51,19 +54,20 @@ public class KafkaSerDe {
         };
     }
 
-    public static <T extends Serializable> KafkaRecordSerializationSchema<KafkaRecord<T>> getSerializer() {
+    public static <T> KafkaRecordSerializationSchema<KafkaRecord<T>> getSerializer(String topic) {
         return (element, ctx, timestamp) ->
         {
             try {
                 return new ProducerRecord<>(
-                        "output-topic",
+                        topic,
                         /* partition */ null,
                         /* timestamp */ System.currentTimeMillis(),
                         /* key */ element.key().getBytes(StandardCharsets.UTF_8),
                         /* value */ KafkaSerDe.objectMapper.writeValueAsString(element.value()).getBytes(StandardCharsets.UTF_8)
                 );
             } catch (JsonProcessingException e) {
-                throw new RuntimeException(e);
+                log.error(e.getMessage());
+                return null;
             }
         };
     }

@@ -7,13 +7,12 @@ import org.apache.flink.connector.kafka.source.KafkaSource;
 import org.apache.flink.connector.kafka.source.enumerator.initializer.OffsetsInitializer;
 import org.apache.flink.streaming.api.datastream.DataStream;
 import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
-import org.example.operators.StatefulJoin;
 import org.example.serde.KafkaRecord;
 import org.example.serde.KafkaSerDe;
 
 import java.time.Duration;
 
-public class Main {
+public class JoinExample {
 
     static final String BOOTSTRAP_SERVERS = "kafka:19092";
 
@@ -39,7 +38,7 @@ public class Main {
 
         KafkaSink<KafkaRecord<String>> sink = KafkaSink.<KafkaRecord<String>>builder()
                 .setBootstrapServers(BOOTSTRAP_SERVERS)
-                .setRecordSerializer(KafkaSerDe.getSerializer())
+                .setRecordSerializer(KafkaSerDe.getSerializer("output-topic"))
                 .setDeliveryGuarantee(DeliveryGuarantee.AT_LEAST_ONCE)
                 .build();
 
@@ -54,13 +53,17 @@ public class Main {
         inputs
                 .keyBy(KafkaRecord::key)
                 .connect(inputs2.keyBy(KafkaRecord::key))
-                .process(new StatefulJoin<>((r1, r2) -> new KafkaRecord<>(r1.key(), r1.value() + " " + r2.value())))
+                .process(new org.example.operators.StatefulJoin<>((r1, r2) -> new KafkaRecord<>(
+                        r1.key(),
+                        System.currentTimeMillis(),
+                        r1.value() + " " + r2.value()
+                )))
                 .sinkTo(sink);
 
         inputs2
                 .keyBy(KafkaRecord::key)
                 .connect(inputs.keyBy(KafkaRecord::key))
-                .process(new StatefulJoin<>((r1, r2) -> new KafkaRecord<>(r1.key(), "! " + r1.value() + " " + r2.value() + " !")))
+                .process(new org.example.operators.StatefulJoin<>((r1, r2) -> new KafkaRecord<>(r1.key(), System.currentTimeMillis(), "! " + r1.value() + " " + r2.value() + " !")))
                 .sinkTo(sink);
 
         env.execute();
