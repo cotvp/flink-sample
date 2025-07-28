@@ -25,7 +25,7 @@ public class JoinExample {
                 .setTopics("input-topic")
                 .setGroupId("my-group")
                 .setStartingOffsets(OffsetsInitializer.latest())
-                .setDeserializer(KafkaSerDe.getDeserializer(String.class))
+                .setDeserializer(KafkaSerDe.getStringDeserializer())
                 .build();
 
         KafkaSource<KafkaRecord<String>> additionalSource = KafkaSource.<KafkaRecord<String>>builder()
@@ -33,7 +33,7 @@ public class JoinExample {
                 .setTopics("input-topic2")
                 .setGroupId("my-group2")
                 .setStartingOffsets(OffsetsInitializer.latest())
-                .setDeserializer(KafkaSerDe.getDeserializer(String.class))
+                .setDeserializer(KafkaSerDe.getStringDeserializer())
                 .build();
 
         KafkaSink<KafkaRecord<String>> sink = KafkaSink.<KafkaRecord<String>>builder()

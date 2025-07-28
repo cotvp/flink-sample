@@ -28,7 +28,7 @@ public class FamilyExample {
                 .setTopics("family-topic")
                 .setGroupId("family-group")
                 .setStartingOffsets(OffsetsInitializer.latest())
-                .setDeserializer(KafkaSerDe.getDeserializer(FamilyChange.class))
+                .setDeserializer(KafkaSerDe.getPOJODeserializer(FamilyChange.class))
                 .build();
 
 

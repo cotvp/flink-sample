@@ -17,12 +17,13 @@ import java.nio.charset.StandardCharsets;
 @Slf4j
 public class KafkaSerDe {
 
-    private KafkaSerDe() {}
+    private KafkaSerDe() {
+    }
 
     private static final ObjectMapper objectMapper = new ObjectMapper();
 
 
-    public static <T> KafkaRecordDeserializationSchema<KafkaRecord<T>> getDeserializer(Class<T> clazz) {
+    public static <T> KafkaRecordDeserializationSchema<KafkaRecord<T>> getPOJODeserializer(Class<T> clazz) {
         return new KafkaRecordDeserializationSchema<>() {
 
             @Override
@@ -37,10 +38,11 @@ public class KafkaSerDe {
                             ? null
                             : new String(consumerRecord.key(), StandardCharsets.UTF_8);
                     String valueString = new String(consumerRecord.value(), StandardCharsets.UTF_8);
-                    T value = clazz.equals(String.class)
-                            ? (T) valueString
-                            : KafkaSerDe.objectMapper.readValue(valueString, clazz);
-                    collector.collect(new KafkaRecord<>(key, consumerRecord.offset(), value));
+                    collector.collect(new KafkaRecord<>(
+                            key,
+                            consumerRecord.offset(),
+                            KafkaSerDe.objectMapper.readValue(valueString, clazz)
+                    ));
                 } catch (JsonProcessingException e) {
                     log.error(e.getMessage());
                 }
@@ -48,6 +50,33 @@ public class KafkaSerDe {
 
             @Override
             public TypeInformation<KafkaRecord<T>> getProducedType() {
+                return TypeInformation.of(new TypeHint<>() {
+                });
+            }
+        };
+    }
+
+    public static KafkaRecordDeserializationSchema<KafkaRecord<String>> getStringDeserializer() {
+        return new KafkaRecordDeserializationSchema<>() {
+
+            @Override
+            public void open(DeserializationSchema.InitializationContext context) throws Exception {
+                KafkaRecordDeserializationSchema.super.open(context);
+            }
+
+            @Override
+            public void deserialize(ConsumerRecord<byte[], byte[]> consumerRecord, Collector<KafkaRecord<String>> collector) {
+                String key = consumerRecord.key() == null
+                        ? null
+                        : new String(consumerRecord.key(), StandardCharsets.UTF_8);
+                collector.collect(new KafkaRecord<>(
+                        key,
+                        consumerRecord.offset(),
+                        new String(consumerRecord.value(), StandardCharsets.UTF_8)));
+            }
+
+            @Override
+            public TypeInformation<KafkaRecord<String>> getProducedType() {
                 return TypeInformation.of(new TypeHint<>() {
                 });
             }
