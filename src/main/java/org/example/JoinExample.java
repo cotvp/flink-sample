@@ -63,7 +63,11 @@ public class JoinExample {
         inputs2
                 .keyBy(KafkaRecord::key)
                 .connect(inputs.keyBy(KafkaRecord::key))
-                .process(new org.example.operators.StatefulJoin<>((r1, r2) -> new KafkaRecord<>(r1.key(), System.currentTimeMillis(), "! " + r1.value() + " " + r2.value() + " !")))
+                .process(new org.example.operators.StatefulJoin<>((r1, r2) -> new KafkaRecord<>(
+                        r1.key(),
+                        System.currentTimeMillis(),
+                        "! " + r1.value() + " " + r2.value() + " !"
+                )))
                 .sinkTo(sink);
 
         env.execute();
