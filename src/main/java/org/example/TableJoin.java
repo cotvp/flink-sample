@@ -75,8 +75,14 @@ public class TableJoin {
                    FROM SourceTable1) AS latest_per_key
                  WHERE row_num = 1
                 """);
-        Table input2 = tableEnv.from("SourceTable2")
-                .select($("key").as("key2"), $("b"));
+        Table input2 = tableEnv.sqlQuery("""
+                SELECT key AS key2, b
+                FROM (
+                   SELECT key, b, event_time,
+                     ROW_NUMBER() OVER (PARTITION BY key ORDER BY event_time DESC) AS row_num
+                   FROM SourceTable2) AS latest_per_key
+                 WHERE row_num = 1
+                """);
 
         input1
                 .join(input2)
