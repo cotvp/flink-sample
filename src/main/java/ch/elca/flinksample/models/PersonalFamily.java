@@ -1,4 +1,4 @@
-package org.example.models;
+package ch.elca.flinksample.models;
 
 import java.util.Set;
 

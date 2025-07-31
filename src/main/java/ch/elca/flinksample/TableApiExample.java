@@ -1,4 +1,4 @@
-package org.example;
+package ch.elca.flinksample;
 
 import org.apache.flink.streaming.connectors.kafka.table.KafkaConnectorOptions;
 import org.apache.flink.table.api.*;

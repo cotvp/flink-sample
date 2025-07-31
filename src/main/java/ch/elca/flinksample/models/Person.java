@@ -1,6 +1,6 @@
-package org.example.models;
+package ch.elca.flinksample.models;
 
-import org.example.serde.KafkaRecord;
+import ch.elca.flinksample.serde.KafkaRecord;
 
 import java.util.Set;
 

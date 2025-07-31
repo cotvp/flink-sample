@@ -1,5 +1,6 @@
-package org.example.operators;
+package ch.elca.flinksample.operators;
 
+import ch.elca.flinksample.serde.KafkaRecord;
 import org.apache.flink.api.common.functions.OpenContext;
 import org.apache.flink.api.common.functions.RichFlatMapFunction;
 import org.apache.flink.api.common.state.ValueState;
@@ -7,9 +8,8 @@ import org.apache.flink.api.common.state.ValueStateDescriptor;
 import org.apache.flink.api.common.typeinfo.TypeHint;
 import org.apache.flink.api.common.typeinfo.TypeInformation;
 import org.apache.flink.util.Collector;
-import org.example.models.FamilyChange;
-import org.example.models.PersonalFamily;
-import org.example.serde.KafkaRecord;
+import ch.elca.flinksample.models.FamilyChange;
+import ch.elca.flinksample.models.PersonalFamily;
 
 import java.util.Collections;
 import java.util.HashSet;

@@ -1,5 +1,7 @@
-package org.example;
+package ch.elca.flinksample;
 
+import ch.elca.flinksample.operators.StatefulJoin;
+import ch.elca.flinksample.serde.KafkaRecord;
 import org.apache.flink.api.common.eventtime.WatermarkStrategy;
 import org.apache.flink.connector.base.DeliveryGuarantee;
 import org.apache.flink.connector.kafka.sink.KafkaSink;
@@ -7,8 +9,7 @@ import org.apache.flink.connector.kafka.source.KafkaSource;
 import org.apache.flink.connector.kafka.source.enumerator.initializer.OffsetsInitializer;
 import org.apache.flink.streaming.api.datastream.DataStream;
 import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
-import org.example.serde.KafkaRecord;
-import org.example.serde.KafkaSerDe;
+import ch.elca.flinksample.serde.KafkaSerDe;
 
 import java.time.Duration;
 
@@ -53,7 +54,7 @@ public class JoinExample {
         inputs
                 .keyBy(KafkaRecord::key)
                 .connect(inputs2.keyBy(KafkaRecord::key))
-                .process(new org.example.operators.StatefulJoin<>((r1, r2) -> new KafkaRecord<>(
+                .process(new StatefulJoin<>((r1, r2) -> new KafkaRecord<>(
                         r1.key(),
                         System.currentTimeMillis(),
                         r1.value() + " " + r2.value()
@@ -63,7 +64,7 @@ public class JoinExample {
         inputs2
                 .keyBy(KafkaRecord::key)
                 .connect(inputs.keyBy(KafkaRecord::key))
-                .process(new org.example.operators.StatefulJoin<>((r1, r2) -> new KafkaRecord<>(
+                .process(new StatefulJoin<>((r1, r2) -> new KafkaRecord<>(
                         r1.key(),
                         System.currentTimeMillis(),
                         "! " + r1.value() + " " + r2.value() + " !"

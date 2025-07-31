@@ -1,5 +1,12 @@
-package org.example;
+package ch.elca.flinksample;
 
+import ch.elca.flinksample.models.FamilyChange;
+import ch.elca.flinksample.models.Person;
+import ch.elca.flinksample.models.PersonalFamily;
+import ch.elca.flinksample.operators.AggregateFamilies;
+import ch.elca.flinksample.operators.PersonalizeFamily;
+import ch.elca.flinksample.serde.KafkaRecord;
+import ch.elca.flinksample.serde.KafkaSerDe;
 import org.apache.flink.api.common.eventtime.WatermarkStrategy;
 import org.apache.flink.connector.base.DeliveryGuarantee;
 import org.apache.flink.connector.kafka.sink.KafkaSink;
@@ -7,13 +14,6 @@ import org.apache.flink.connector.kafka.source.KafkaSource;
 import org.apache.flink.connector.kafka.source.enumerator.initializer.OffsetsInitializer;
 import org.apache.flink.streaming.api.datastream.DataStream;
 import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
-import org.example.models.FamilyChange;
-import org.example.models.Person;
-import org.example.models.PersonalFamily;
-import org.example.operators.AggregateFamilies;
-import org.example.operators.PersonalizeFamily;
-import org.example.serde.KafkaRecord;
-import org.example.serde.KafkaSerDe;
 
 public class FamilyExample {
 

@@ -1,4 +1,4 @@
-package org.example.serde;
+package ch.elca.flinksample.serde;
 
 public record KafkaRecord<T> (String key, Long offset, T value) {
 

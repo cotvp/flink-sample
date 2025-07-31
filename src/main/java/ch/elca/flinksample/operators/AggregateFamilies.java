@@ -1,4 +1,4 @@
-package org.example.operators;
+package ch.elca.flinksample.operators;
 
 import org.apache.flink.api.common.functions.OpenContext;
 import org.apache.flink.api.common.functions.RichFlatMapFunction;
@@ -7,8 +7,8 @@ import org.apache.flink.api.common.state.ValueStateDescriptor;
 import org.apache.flink.api.common.typeinfo.TypeHint;
 import org.apache.flink.api.common.typeinfo.TypeInformation;
 import org.apache.flink.util.Collector;
-import org.example.models.Person;
-import org.example.models.PersonalFamily;
+import ch.elca.flinksample.models.Person;
+import ch.elca.flinksample.models.PersonalFamily;
 
 import java.util.HashMap;
 import java.util.Map;

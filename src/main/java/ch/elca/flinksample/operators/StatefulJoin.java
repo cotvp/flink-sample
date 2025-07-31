@@ -1,5 +1,6 @@
-package org.example.operators;
+package ch.elca.flinksample.operators;
 
+import ch.elca.flinksample.serde.KafkaRecord;
 import org.apache.flink.api.common.functions.OpenContext;
 import org.apache.flink.api.common.state.ValueState;
 import org.apache.flink.api.common.state.ValueStateDescriptor;
@@ -7,7 +8,6 @@ import org.apache.flink.api.common.typeinfo.TypeHint;
 import org.apache.flink.api.common.typeinfo.TypeInformation;
 import org.apache.flink.streaming.api.functions.co.KeyedCoProcessFunction;
 import org.apache.flink.util.Collector;
-import org.example.serde.KafkaRecord;
 
 import java.io.Serializable;
 import java.util.function.BiFunction;

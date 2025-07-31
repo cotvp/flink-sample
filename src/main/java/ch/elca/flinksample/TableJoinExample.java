@@ -1,11 +1,11 @@
-package org.example;
+package ch.elca.flinksample;
 
 import org.apache.flink.streaming.connectors.kafka.table.KafkaConnectorOptions;
 import org.apache.flink.table.api.*;
 
 import static org.apache.flink.table.api.Expressions.$;
 
-public class TableJoin {
+public class TableJoinExample {
     static final String BOOTSTRAP_SERVERS = "kafka:19092";
 
     public static void main(String[] args) {
