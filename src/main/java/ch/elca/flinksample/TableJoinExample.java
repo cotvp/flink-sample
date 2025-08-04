@@ -8,7 +8,7 @@ import static org.apache.flink.table.api.Expressions.$;
 public class TableJoinExample {
     static final String BOOTSTRAP_SERVERS = "kafka:19092";
 
-    public static void main(String[] args) {
+    public static void tableJoin(String bootstrapServers, String inputTopic1, String inputTopic2, String outputTopic) {
         // Set up the Flink execution environment
 
         EnvironmentSettings settings = EnvironmentSettings
@@ -26,8 +26,8 @@ public class TableJoinExample {
                         .column("key", DataTypes.STRING())
                         .column("a", DataTypes.BIGINT())
                         .build())
-                .option(KafkaConnectorOptions.PROPS_BOOTSTRAP_SERVERS, BOOTSTRAP_SERVERS)
-                .option(KafkaConnectorOptions.TOPIC.key(), "table-join-input-1")
+                .option(KafkaConnectorOptions.PROPS_BOOTSTRAP_SERVERS, bootstrapServers)
+                .option(KafkaConnectorOptions.TOPIC.key(), inputTopic1)
                 .option(KafkaConnectorOptions.PROPS_GROUP_ID, "table-consumer")
                 .option(KafkaConnectorOptions.SCAN_STARTUP_MODE, KafkaConnectorOptions.ScanStartupMode.LATEST_OFFSET)
                 .option(KafkaConnectorOptions.VALUE_FORMAT, "json")
@@ -44,8 +44,8 @@ public class TableJoinExample {
                         .column("key", DataTypes.STRING())
                         .column("b", DataTypes.BIGINT())
                         .build())
-                .option(KafkaConnectorOptions.PROPS_BOOTSTRAP_SERVERS, BOOTSTRAP_SERVERS)
-                .option(KafkaConnectorOptions.TOPIC.key(), "table-join-input-2")
+                .option(KafkaConnectorOptions.PROPS_BOOTSTRAP_SERVERS, bootstrapServers)
+                .option(KafkaConnectorOptions.TOPIC.key(), inputTopic2)
                 .option(KafkaConnectorOptions.PROPS_GROUP_ID, "table-consumer")
                 .option(KafkaConnectorOptions.SCAN_STARTUP_MODE, KafkaConnectorOptions.ScanStartupMode.LATEST_OFFSET)
                 .option(KafkaConnectorOptions.VALUE_FORMAT, "json")
@@ -61,7 +61,7 @@ public class TableJoinExample {
                         .primaryKeyNamed("pk_key", "key")
                         .build())
                 .option(KafkaConnectorOptions.PROPS_BOOTSTRAP_SERVERS, BOOTSTRAP_SERVERS)
-                .option(KafkaConnectorOptions.TOPIC.key(), "table-join-output")
+                .option(KafkaConnectorOptions.TOPIC.key(), outputTopic)
                 .option(KafkaConnectorOptions.VALUE_FORMAT, "json")
                 .option(KafkaConnectorOptions.KEY_FORMAT, "raw")
                 .option(KafkaConnectorOptions.VALUE_FIELDS_INCLUDE, KafkaConnectorOptions.ValueFieldsStrategy.EXCEPT_KEY)
@@ -91,4 +91,9 @@ public class TableJoinExample {
                 .insertInto("SinkTable").execute();
 
     }
+
+    public static void main(String[] args) {
+        tableJoin(BOOTSTRAP_SERVERS, "table-join-input-1", "table-join-input-2", "table-join-output");
+    }
+
 }
