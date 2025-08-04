@@ -30,25 +30,33 @@ services:
       - flink-net
 
   kafka:
-    image: bitnami/kafka:4.0.0
+    image: apache/kafka-native:4.0.0
+    container_name: kafka
     ports:
-      - "9092:9092"   # Host access (IntelliJ, etc.)
-      - "19092:19092" # Internal container access (Flink, etc.)
+      - "9092:9092"   # external client (IntelliJ, testcontainers, etc.)
+      - "19092:19092" # internal client (Flink, other brokers)
+      - "9093:9093"   # controller port
     environment:
-      KAFKA_KRAFT_MODE: "true"
-      KAFKA_CFG_PROCESS_ROLES: "broker,controller"
-      KAFKA_CFG_NODE_ID: 1
-      KAFKA_CFG_CONTROLLER_QUORUM_VOTERS: "1@kafka:9093"
+      # random uuid
+      KAFKA_CLUSTER_ID: "4e5a8f3d-1234-4abc-8d9e-0123456789ab"
 
-      # Multi-listener setup
-      KAFKA_CFG_LISTENERS: "PLAINTEXT_INTERNAL://0.0.0.0:19092,PLAINTEXT_EXTERNAL://0.0.0.0:9092,CONTROLLER://0.0.0.0:9093"
-      KAFKA_CFG_ADVERTISED_LISTENERS: "PLAINTEXT_INTERNAL://kafka:19092,PLAINTEXT_EXTERNAL://localhost:9092"
-      KAFKA_CFG_LISTENER_SECURITY_PROTOCOL_MAP: "PLAINTEXT_INTERNAL:PLAINTEXT,PLAINTEXT_EXTERNAL:PLAINTEXT,CONTROLLER:PLAINTEXT"
-      KAFKA_CFG_INTER_BROKER_LISTENER_NAME: "PLAINTEXT_INTERNAL"
-      KAFKA_CFG_CONTROLLER_LISTENER_NAMES: "CONTROLLER"
+      # **KRaft roles** and node/controller config
+      KAFKA_PROCESS_ROLES: "broker,controller"
+      KAFKA_NODE_ID: "1"
+      KAFKA_CONTROLLER_QUORUM_VOTERS: "1@kafka:9093"
 
-      # Enable topic auto-creation for dev
-      KAFKA_CFG_AUTO_CREATE_TOPICS_ENABLE: "true"
+      # **Listeners** (what to bind) and **Advertised listeners** (how clients reach you)
+      KAFKA_LISTENERS: "PLAINTEXT_INTERNAL://0.0.0.0:19092,PLAINTEXT_EXTERNAL://0.0.0.0:9092,CONTROLLER://0.0.0.0:9093"
+      KAFKA_ADVERTISED_LISTENERS: "PLAINTEXT_INTERNAL://kafka:19092,PLAINTEXT_EXTERNAL://localhost:9092,CONTROLLER://kafka:9093"
+
+      # Protocol mapping and inter-broker listener
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: "PLAINTEXT_INTERNAL:PLAINTEXT,PLAINTEXT_EXTERNAL:PLAINTEXT,CONTROLLER:PLAINTEXT"
+      KAFKA_INTER_BROKER_LISTENER_NAME: "PLAINTEXT_INTERNAL"
+
+      KAFKA_CONTROLLER_LISTENER_NAMES: "CONTROLLER"
+
+      # convenience for tests/dev: auto-create topics
+      KAFKA_AUTO_CREATE_TOPICS_ENABLE: "true"
 
     networks:
       - flink-net
