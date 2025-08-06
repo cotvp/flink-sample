@@ -2,7 +2,7 @@ package ch.elca.flinksample;
 
 import ch.elca.flinksample.models.FamilyChange;
 import ch.elca.flinksample.models.Person;
-import ch.elca.flinksample.models.PersonalFamily;
+import ch.elca.flinksample.models.PersonalFamilyState;
 import ch.elca.flinksample.operators.AggregateFamilies;
 import ch.elca.flinksample.operators.PersonalizeFamily;
 import ch.elca.flinksample.serde.KafkaRecord;
@@ -44,8 +44,8 @@ public class FamilyExample {
         inputs
                 .keyBy(KafkaRecord::key)
                 .flatMap(new PersonalizeFamily())
-                .keyBy(PersonalFamily::personId)
-                .flatMap(new AggregateFamilies())
+                .keyBy(PersonalFamilyState::personId)
+                .map(new AggregateFamilies())
                 .map(Person::toKafkaRecord)
                 .sinkTo(sink);
 
