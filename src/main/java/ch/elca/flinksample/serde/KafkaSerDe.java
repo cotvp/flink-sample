@@ -40,7 +40,7 @@ public class KafkaSerDe {
                     String valueString = new String(consumerRecord.value(), StandardCharsets.UTF_8);
                     collector.collect(new KafkaRecord<>(
                             key,
-                            consumerRecord.offset(),
+                            consumerRecord.timestamp(),
                             KafkaSerDe.objectMapper.readValue(valueString, clazz)
                     ));
                 } catch (JsonProcessingException e) {
@@ -71,7 +71,7 @@ public class KafkaSerDe {
                         : new String(consumerRecord.key(), StandardCharsets.UTF_8);
                 collector.collect(new KafkaRecord<>(
                         key,
-                        consumerRecord.offset(),
+                        consumerRecord.timestamp(),
                         new String(consumerRecord.value(), StandardCharsets.UTF_8)));
             }
 

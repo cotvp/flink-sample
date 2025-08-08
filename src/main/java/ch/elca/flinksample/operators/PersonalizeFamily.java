@@ -29,11 +29,11 @@ public class PersonalizeFamily extends RichFlatMapFunction<KafkaRecord<FamilyCha
         previousFamilyMembers.removeAll(family.value().familyMemberRefs());
         // create personal "tombstone" families
         previousFamilyMembers.forEach(personRef ->
-                collector.collect(new PersonalFamilyState(personRef, family.key(), family.offset(), null))
+                collector.collect(new PersonalFamilyState(personRef, family.key(), family.timestamp(), null))
         );
         // create current personal families
         family.value().familyMemberRefs().forEach(personRef ->
-                collector.collect(new PersonalFamilyState(personRef, family.key(), family.offset(), family.value().familyMemberRefs()))
+                collector.collect(new PersonalFamilyState(personRef, family.key(), family.timestamp(), family.value().familyMemberRefs()))
         );
         previousFamilyState.update(family.value());
     }

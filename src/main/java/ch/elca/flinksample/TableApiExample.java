@@ -23,7 +23,6 @@ public class TableApiExample {
                 .schema(Schema.newBuilder()
                         .columnByMetadata("timestamp", DataTypes.TIMESTAMP_LTZ(3))
                         .columnByMetadata("partition", DataTypes.BIGINT())
-                        .columnByMetadata("offset", DataTypes.BIGINT())
                         .column("key", DataTypes.STRING())
                         .column("a", DataTypes.BIGINT())
                         .column("b", DataTypes.BIGINT())
