@@ -18,6 +18,7 @@ public class TableApiExample {
 
         TableEnvironment tableEnv = TableEnvironment.create(settings);
 
+        // define source
         tableEnv.createTemporaryTable("SourceTable", TableDescriptor.forConnector("kafka")
                 .schema(Schema.newBuilder()
                         .columnByMetadata("timestamp", DataTypes.TIMESTAMP_LTZ(3))
@@ -37,6 +38,7 @@ public class TableApiExample {
                 .option(KafkaConnectorOptions.VALUE_FIELDS_INCLUDE, KafkaConnectorOptions.ValueFieldsStrategy.EXCEPT_KEY)
                 .build());
 
+        // define sink
         tableEnv.executeSql("""
                 CREATE TABLE SinkTable (
                   `key` STRING,
@@ -46,7 +48,6 @@ public class TableApiExample {
                 ) WITH (
                   'connector' = 'kafka',
                   'topic' = 'table-output',
-                  'scan.startup.mode' = 'earliest-offset',
                   'properties.bootstrap.servers' = '%s',
                   'key.format' = 'raw',
                   'key.fields' = 'key',
