@@ -56,7 +56,7 @@ public class TableApiExample {
 
         input
                 .select($("key"), $("a"), $("b"), $("a").plus($("b")).as("c"))
-                .insertInto("SinkTable").execute();
-
+                .insertInto("SinkTable")
+                .execute();
     }
 }
