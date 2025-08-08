@@ -37,20 +37,23 @@ public class TableApiExample {
                 .option(KafkaConnectorOptions.VALUE_FIELDS_INCLUDE, KafkaConnectorOptions.ValueFieldsStrategy.EXCEPT_KEY)
                 .build());
 
-        tableEnv.createTemporaryTable("SinkTable", TableDescriptor.forConnector("kafka")
-                .schema(Schema.newBuilder()
-                        .column("key", DataTypes.STRING())
-                        .column("a", DataTypes.BIGINT())
-                        .column("b", DataTypes.BIGINT())
-                        .column("c", DataTypes.BIGINT())
-                        .build())
-                .option(KafkaConnectorOptions.PROPS_BOOTSTRAP_SERVERS, BOOTSTRAP_SERVERS)
-                .option(KafkaConnectorOptions.TOPIC.key(), "table-output")
-                .option(KafkaConnectorOptions.VALUE_FORMAT, "json")
-                .option(KafkaConnectorOptions.KEY_FORMAT, "raw")
-                .option(KafkaConnectorOptions.KEY_FIELDS.key(), "key")
-                .option(KafkaConnectorOptions.VALUE_FIELDS_INCLUDE, KafkaConnectorOptions.ValueFieldsStrategy.EXCEPT_KEY)
-                .build());
+        tableEnv.executeSql("""
+                CREATE TABLE SinkTable (
+                  `key` STRING,
+                  `a` BIGINT,
+                  `b` BIGINT,
+                  `c` BIGINT
+                ) WITH (
+                  'connector' = 'kafka',
+                  'topic' = 'table-output',
+                  'scan.startup.mode' = 'earliest-offset',
+                  'properties.bootstrap.servers' = '%s',
+                  'key.format' = 'raw',
+                  'key.fields' = 'key',
+                  'value.format' = 'json',
+                  'value.fields-include' = 'EXCEPT_KEY'
+                );
+                """.formatted(BOOTSTRAP_SERVERS));
 
         Table input = tableEnv.from("SourceTable");
 

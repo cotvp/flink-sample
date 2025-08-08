@@ -59,14 +59,6 @@
             <version>1.18.38</version>
         </dependency>
 
-        <!-- Logging /w SLF4J -->
-        <dependency>
-            <groupId>ch.qos.logback</groupId>
-            <artifactId>logback-classic</artifactId>
-            <version>1.5.18</version>
-            <scope>compile</scope>
-        </dependency>
-
         <!-- Flink testing -->
         <dependency>
             <groupId>org.apache.flink</groupId>
