@@ -47,9 +47,9 @@ public class JoinExample {
                 .<KafkaRecord<String>>forBoundedOutOfOrderness(Duration.ZERO)
                 .withTimestampAssigner((element, recordTimestamp) -> System.currentTimeMillis());
 
-        DataStream<KafkaRecord<String>> inputs = env.fromSource(source, strategy, "Kafka Source");
+        DataStream<KafkaRecord<String>> inputs = env.fromSource(source, strategy, "Kafka Source 1");
 
-        DataStream<KafkaRecord<String>> inputs2 = env.fromSource(additionalSource, strategy, "Kafka Source");
+        DataStream<KafkaRecord<String>> inputs2 = env.fromSource(additionalSource, strategy, "Kafka Source 2");
 
         inputs
                 .keyBy(KafkaRecord::key)
