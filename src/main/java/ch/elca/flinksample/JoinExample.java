@@ -57,7 +57,7 @@ public class JoinExample {
                 .process(new StatefulJoin<>((r1, r2) -> new KafkaRecord<>(
                         r1.key(),
                         System.currentTimeMillis(),
-                        r1.value() + " " + r2.value()
+                        "Join1: " + r1.value() + " " + r2.value()
                 )))
                 .sinkTo(sink);
 
@@ -67,7 +67,7 @@ public class JoinExample {
                 .process(new StatefulJoin<>((r1, r2) -> new KafkaRecord<>(
                         r1.key(),
                         System.currentTimeMillis(),
-                        "! " + r1.value() + " " + r2.value() + " !"
+                        "Join 2:" + r1.value() + " " + r2.value()
                 )))
                 .sinkTo(sink);
 
