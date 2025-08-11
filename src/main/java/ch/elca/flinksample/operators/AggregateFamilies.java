@@ -36,7 +36,7 @@ public class AggregateFamilies extends RichMapFunction<PersonalFamilyState, Pers
                 personalFamilyState.familyId(),
                 personalFamilyState,
                 (fam1, fam2) -> {
-                    PersonalFamilyState newerChange = fam1.offset() > fam2.offset() ? fam1 : fam2;
+                    PersonalFamilyState newerChange = fam1.timestamp() > fam2.timestamp() ? fam1 : fam2;
                     return Objects.isNull(newerChange.familyMemberRefs()) ? null : newerChange;
                 });
         personalFamilyAggregate.update(familyMap);
