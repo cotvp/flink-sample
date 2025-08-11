@@ -35,7 +35,7 @@ public class FamilyExample {
         KafkaSink<KafkaRecord<Person>> sink = KafkaSink.<KafkaRecord<Person>>builder()
                 .setBootstrapServers(BOOTSTRAP_SERVERS)
                 .setRecordSerializer(KafkaSerDe.getSerializer("family-members"))
-                .setDeliveryGuarantee(DeliveryGuarantee.AT_LEAST_ONCE)
+                .setDeliveryGuarantee(DeliveryGuarantee.EXACTLY_ONCE)
                 .build();
 
 
