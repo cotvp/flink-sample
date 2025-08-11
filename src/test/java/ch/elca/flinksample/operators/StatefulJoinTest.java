@@ -5,8 +5,8 @@ import org.apache.flink.api.common.typeinfo.BasicTypeInfo;
 import org.apache.flink.streaming.api.operators.co.KeyedCoProcessOperator;
 import org.apache.flink.streaming.api.watermark.Watermark;
 import org.apache.flink.streaming.util.KeyedTwoInputStreamOperatorTestHarness;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import static org.assertj.core.api.AssertionsForInterfaceTypes.assertThat;
 
@@ -14,7 +14,7 @@ import static org.assertj.core.api.AssertionsForInterfaceTypes.assertThat;
 public class StatefulJoinTest {
     private KeyedTwoInputStreamOperatorTestHarness<String, KafkaRecord<String>, KafkaRecord<String>, KafkaRecord<String>> testHarness;
 
-    @Before
+    @BeforeEach
     public void setupTestHarness() throws Exception {
 
         //instantiate user-defined function

@@ -40,7 +40,7 @@ public class JoinExample {
         KafkaSink<KafkaRecord<String>> sink = KafkaSink.<KafkaRecord<String>>builder()
                 .setBootstrapServers(BOOTSTRAP_SERVERS)
                 .setRecordSerializer(KafkaSerDe.getSerializer("output-topic"))
-                .setDeliveryGuarantee(DeliveryGuarantee.EXACTLY_ONCE)
+                .setDeliveryGuarantee(DeliveryGuarantee.AT_LEAST_ONCE)
                 .build();
 
         WatermarkStrategy<KafkaRecord<String>> strategy = WatermarkStrategy
