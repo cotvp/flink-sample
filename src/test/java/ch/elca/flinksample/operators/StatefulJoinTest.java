@@ -11,7 +11,7 @@ import org.junit.jupiter.api.Test;
 import static org.assertj.core.api.AssertionsForInterfaceTypes.assertThat;
 
 
-public class StatefulJoinTest {
+class StatefulJoinTest {
     private KeyedTwoInputStreamOperatorTestHarness<String, KafkaRecord<String>, KafkaRecord<String>, KafkaRecord<String>> testHarness;
 
     @BeforeEach
@@ -37,7 +37,7 @@ public class StatefulJoinTest {
     }
 
     @Test
-    public void testingStatefulFlatMapFunction() throws Exception {
+    void testingStatefulFlatMapFunction() throws Exception {
 
         KafkaRecord<String> Topic1KeyA_1 = new KafkaRecord<>("a", null, "1: first a");
         KafkaRecord<String> Topic2KeyB_1 = new KafkaRecord<>("b", null, "2: first b");
