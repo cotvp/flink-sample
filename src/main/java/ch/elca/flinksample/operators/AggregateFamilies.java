@@ -35,15 +35,13 @@ public class AggregateFamilies extends RichMapFunction<PersonalFamilyState, Pers
         familyMap.merge(
                 personalFamilyState.familyId(),
                 personalFamilyState,
-                (fam1, fam2) -> {
-                    PersonalFamilyState newerChange = fam1.timestamp() > fam2.timestamp() ? fam1 : fam2;
-                    return Objects.isNull(newerChange.familyMemberRefs()) ? null : newerChange;
-                });
+                (fam1, fam2) -> fam1.timestamp() > fam2.timestamp() ? fam1 : fam2);
         personalFamilyAggregate.update(familyMap);
         return new Person(
                 personalFamilyState.personId(),
                 familyMap.values().stream()
                         .map(PersonalFamilyState::familyMemberRefs)
+                        .filter(Objects::nonNull)
                         .toList()
         );
     }
