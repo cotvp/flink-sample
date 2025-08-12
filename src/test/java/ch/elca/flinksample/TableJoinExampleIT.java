@@ -139,7 +139,7 @@ public class TableJoinExampleIT {
             consumer.subscribe(Collections.singletonList(OUTPUT_TOPIC));
             List<ConsumerRecord<String, String>> records = new ArrayList<>();
             await()
-                    .pollInterval(Duration.ofMillis(500))
+                    .pollInterval(Duration.ofSeconds(1))
                     .timeout(Duration.ofSeconds(10))
                     .untilAsserted(
                             () -> {
