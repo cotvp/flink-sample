@@ -45,7 +45,7 @@ public class JoinExample {
 
         WatermarkStrategy<KafkaRecord<String>> strategy = WatermarkStrategy
                 .<KafkaRecord<String>>forBoundedOutOfOrderness(Duration.ZERO)
-                .withTimestampAssigner((element, recordTimestamp) -> System.currentTimeMillis());
+                .withTimestampAssigner((element, recordTimestamp) -> element.timestamp());
 
         DataStream<KafkaRecord<String>> inputs = env.fromSource(source, strategy, "Kafka Source 1");
 
